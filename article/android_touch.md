@@ -1,0 +1,1 @@
+对于ViewGroup的dispatchTouchEvent这个方法，无数文章已经讲的很明白，但是mFirstTouchTarget这个对象为什么是一个链表，而不是一个对象，这些文章都没有提及，其实主要是涉及Android一个冷门知识，多点触控，多点触控时会产生大于一个触控事件，说白了就是多个down事件，所以需要多个TouchTarget，至于为什么是链表，很简单，手指落下有先后顺序
