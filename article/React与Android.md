@@ -8,10 +8,10 @@
 
 接下来说说我自己进行的一些架构探索，暂且不谈他是mv什么mp什么，简单来说，就像图1所示那样，这个架构是基于数据驱动思想的，视图的内容与视图数据双向绑定，view与viewmodel双向绑定（就像是react中的view与state那样），viewmodel的数据改变会自动同步到view，view的状态改变也会自动同步到viewmodel中的数据，你可能会说，不对啊，你的业务逻辑在哪呢，业务逻辑presenter（你愿意交business什么的都无所谓）也只由viewmodel的状态驱动，并且只能通过操作viewmodel，当然对于点击事件这种无状态事件，viewmodel中没有状态，会直接通过接口调用presenter。这样说可能太抽象，我们通过实际开发常见的例子说明，如图2所示这是最常见的下拉刷新列表页，这个列表页的视图需要抽象出哪些状态呢，列表item数据算一个（注意这不是你的业务数据，当然如果你的业务数据简单到无需转换就直接是列表数据，那无所谓），banner数据算一个，列表的下拉刷新状态和上拉加载都算，最终的viewmodel如图3代码所示，由于我们已经把view的视图数据抽象出了viewmodel，那么我们便可以直接利用databinding工具直接binding这个layout，省去我们大量的findviewbyId+setxxx的机械代码，接下来我们看如何通过数据驱动进行编程，当用户操作view之后，例如下拉刷新，那么响应的viewmodel中的refreshing会自动变为true，presenter是viewmodel数据的观察者（databinding已经为我们提供了tools），这时候refreshing的状态变化会驱动presenter调用repository进行网络请求，然后这个处理过程就结束了，repository数据更新后会通知presenter，presenter会调用纯函数对原始数据进行处理，也就是viewmodel=f(raw data)，其中f是业务逻辑的纯函数，其作用于原始数据上将其转化成视图模型，之后presenter会调用viewmodel进行数据更新，更新list数据并且将refreshing设置为false，由于view与viewmodel双向绑定，这时候view自动结束下拉刷新状态并且自动更新listview视图，这就是一个简单的数据驱动流程。
 
-![image](https://github.com/kingson09/blog/blob/master/article/resources/architecture.jpg)
+![image](https://github.com/kingson09/blog/blob/master/article/resources/architecture.png)
 图1
 
-![image](https://github.com/kingson09/blog/blob/master/article/resources/architecture_sample.jpg)
+![image](https://github.com/kingson09/blog/blob/master/article/resources/architecture_sample.png)
 图2
 
 
