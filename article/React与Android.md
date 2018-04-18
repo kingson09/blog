@@ -1,0 +1,46 @@
+## 唠叨
+
+第一次接触架构模式是在当年做服务端开发学习j2ee时的mvc架构，说起服务端架构，可谓是元老技术了，各种Spring ssh ioc aop，近年随着一波插件化潮流走过，客户端技术栈日益成熟，各路客户端豪杰被web前端爱折腾的思想感染，也开始探索客户端架构，出现了flux mvc mvp mvvm等等等等各种架构思想，话说虽然各种思想很多，但真正被广泛使用的确不多，在实用方面甚至不如web前端走的远，web前端至少产生了react vue angular等实质性的tools，而Android除了最近Google的一部分工程师推动AAC做一点残缺不全的工作，像Facebook忙着跨平台，根本没有兴趣。
+
+唠叨了这么多，那么就说说我是如何看待架构这个事，我自己的做事有一个风格或者说套路，那就首先抓住这个问题的根本要素，那么我们首先要问：我们需要架构吗？我们需要什么样的架构。而不是一说架构就去Google上search各种mvp mvc然后看一遍往项目上套，套不上就硬套再不行就改，到最后灰头土脸，也没见对项目有什么用处。接下来说正题，对于第一个问题，如果你的项目小巧玲珑，让你丝毫感觉不到开发的难度，那么你可以不用架构，不管web前端还是客户端，那些架构大都是为了维护大型项目，免不了引入各种基础设施，如果项目很小，可能你维护这些基础设施比维护自己项目花的时间还长反而得不偿失，再看第二个问题，我们需要什么样的架构，你可能会说我们需要高扩展性快速开发能力的架构，那你不如说我需要一个能自动输入产品文档输出代码的架构，那么我们反过来说，什么样的架构值得我们使用，一个架构能够帮助我提高开发速度，无论是通过butterknife这种tools减少机械式代码的写作，还是像reactjs那样通过component重用视图组件，或者说他能使得项目具有可测性，让我们可以自己写自动化测试，提高代码的交付质量，那它也是个好架构。
+
+## 架构
+
+接下来说说我自己进行的一些架构探索，暂且不谈他是mv什么mp什么，简单来说，就像图1所示那样，这个架构是基于数据驱动思想的，视图的内容与视图数据双向绑定，view与viewmodel双向绑定（就像是react中的view与state那样），viewmodel的数据改变会自动同步到view，view的状态改变也会自动同步到viewmodel中的数据，你可能会说，不对啊，你的业务逻辑在哪呢，业务逻辑presenter（你愿意交business什么的都无所谓）也只由viewmodel的状态驱动，并且只能通过操作viewmodel，当然对于点击事件这种无状态事件，viewmodel中没有状态，会直接通过接口调用presenter。这样说可能太抽象，我们通过实际开发常见的例子说明，如图2所示这是最常见的下拉刷新列表页，这个列表页的视图需要抽象出哪些状态呢，列表item数据算一个（注意这不是你的业务数据，当然如果你的业务数据简单到无需转换就直接是列表数据，那无所谓），banner数据算一个，列表的下拉刷新状态和上拉加载都算，最终的viewmodel如图3代码所示，由于我们已经把view的视图数据抽象出了viewmodel，那么我们便可以直接利用databinding工具直接binding这个layout，省去我们大量的findviewbyId+setxxx的机械代码，接下来我们看如何通过数据驱动进行编程，当用户操作view之后，例如下拉刷新，那么响应的viewmodel中的refreshing会自动变为true，presenter是viewmodel数据的观察者（databinding已经为我们提供了tools），这时候refreshing的状态变化会驱动presenter调用repository进行网络请求，然后这个处理过程就结束了，repository数据更新后会通知presenter，presenter会调用纯函数对原始数据进行处理，也就是viewmodel=f(raw data)，其中f是业务逻辑的纯函数，其作用于原始数据上将其转化成视图模型，之后presenter会调用viewmodel进行数据更新，更新list数据并且将refreshing设置为false，由于view与viewmodel双向绑定，这时候view自动结束下拉刷新状态并且自动更新listview视图，这就是一个简单的数据驱动流程。
+
+![image](https://github.com/kingson09/blog/blob/master/article/resources/architecture.jpg)
+图1
+
+![image](https://github.com/kingson09/blog/blob/master/article/resources/architecture_sample.jpg)
+图2
+
+
+```
+/*
+ing和state后缀的属性都类似于reactJs的state，代表可变状态,其他属性类似于props
+ */
+public class HallViewModel extends BaseObservable {
+  private boolean loading;
+  private boolean refreshing;
+  private int movieListState = ListViewState.LIST_STATE_EMPTY;
+  private int bannerState = BannerState.BANNER_STATE_EMPTY;
+  private ArrayList<Movie> movies = new ArrayList();
+  private ArrayList<BannerItem> bannerList = new ArrayList();
+```
+
+
+
+## 函数式的 UI 编程
+### 1. Databinding
+
+在[网上都说操作真实 DOM 慢，但测试结果却比 React 更快，为什么？](https://www.zhihu.com/question/31809713)这篇知乎大讨论中，前端大牛们细致分析了Virtual DOM技术的精髓，对于Android平台，其实google之前做了更底层的Display List、Choreographer、VSYNC来进行类似于Virtual DOM绘制命令diff操作，但Virtual DOM精髓不在于加速，而在于为函数式的 UI 编程方式打开了大门，用人话说就是，你以后只负责更新视图数据（state或者viewmodel)就行，更新ui的操作我来做，由于我并不止你具体的ui操作，所以我只能通过Diff来减小更新操作的代价，用更土的说法就是，你原来都是通过findViewById或者view holder来直接更新UI，使用现在你只是更新UI的数据，然后用统一的接口notifyDataChanged或者render通知UI进行整体刷新，这么说你可能会觉得很二，这还有性能可言吗，Facebook当然也知道，所以Virtual DOM做的不止这些，他通过Diff来最小化更新操作，由于Diff本身就很重，所以加入了Vsync同步。你可能会奇怪我为什么说Virtual DOM，是因为没有Virtual DOM，函数式的 UI编程只能处于思想阶段，你可能会说我通过自己实现binding也能搞定，但你在这些基础架构上花的力气最终会让你放弃，再说回Android的函数式的 UI编程如何实现呢，web前端有Virtual DOM，客户端有DataBinding，其实DataBinding来源于微软的WPF，DataBinding和Virtual DOM其实是binding技术的两种截然不同的实现方式，Virtual DOM使用Diff获知具体的ui操作，而DataBinding使用双向绑定，自动生成具体的UI组件holder和具体数据的观察者模式代码，可以说Virtual DOM的实现更简约，DataBinding性能更高，并且Virtual DOM并不能实现双向数据绑定，还需要借助于Vue.js这些框架，假如没有DataBinding，那么可能函数式的 UI 编程只能是一种优秀的思想，就像我们在做Flux重构的时候那样，最后被action爆炸炸的灰头土脸。
+
+### 2. 超重的View层
+
+再说回findViewById，记得第一次给同事介绍databinding的时候，同事说你这还需要给每个view单独定义数据模型太麻烦了，我说你原来不也得定义mTextView这样的属性吗，现在只不过是改成了pojo，同事说不是啊，我都是在method里findViewById，根本不需要定义mTextView，我....，其实findViewById和web前端的getElementById一样，都是对view tree或者DOM做遍历，所以google一直提倡使用viewHolder的方式减少这方面的操作，甚至在recyclerView中加入了这个实现，其实这事也不怪开发者，谁也不愿意写那些mTextView属性，jakewharton大神发现了这一痛点，及时的给google打了补丁，推出了ButterKnife,那么ButterKnife和databinding有什么区别呢，下面这篇译文说了一个原因，[Reasons I’m Not Using Android Data Binding](https://medium.com/@Miqubel/4-reasons-im-not-using-android-data-binding-e62127c2650c)，他说是因为他布局拥有不同的数据源，所以不用databinding，其实这是因为他错误的使用了databinding，databinding的视图数据，就像ReactJs中的state+props，只与视图一一对应，和你的数据源压根没有关系，在大部分工程师的代码习惯中，绝大多数都是把未经处理的原始数据抛给view，view来做数据转化，然后顺便findViewById然后setXXX，就像我们app的订单页面，大厅页面，都是直接把json转成的pojo做点简单处理甚至不处理直接抛给view或者adapter，由他们做原始数据和视图数据的转化，可能一个listview中的Textview标签对应原始数据json中的几个属性或者经过业务逻辑处理后的属性，这导致view和业务逻辑完全耦合，这使得在做mvc mvp等重构的时候，仅仅是对view层的代码进行了面向对象的整理，分出来的p层、c层或者m层薄的几乎没有可测性，因为基本就是一些网络请求或者页面跳转等逻辑，然而我们基于函数式的 UI 编程思想，使用databinding后，就可以强迫你抽象出ReactJs中的 state+props，然后binding一下就可以，比原来的开发工作量也多不了多少，这样的话，我们的view层薄的可能只剩下纯正的视觉逻辑，业务逻辑都移动到了纯函数类中，这样代码结构清晰了，也提高了组件复用性并且降低了后期开发维护成本。
+
+# 自动化测试
+
+话说我们程序员一直有一个梦想，那就是我们能不能用代码测试我们的代码（说起来就像是机器人生产机器人一样），在之前的代码架构中，由于view与业务逻辑高度耦合，造成厚重的view层无法进行测试，只能对一些p层以下的业务逻辑进行单元测试，这导致各产品线拥有庞大的测试团队来对应用功能进行点点点测试，耗时耗力耗金钱，然而在应用函数式的 UI 编程架构之后，view层被抽象成了ViewModel，了ViewModel=View，这使得我们可以对了ViewModel编写出自动化测试用例，辅助MOCK平台或工具进行数据MOCK，从而实现对整个页面的功能进行测试，在新版本开发完成后，如果视图层没有改变，只需要简单修改测试用例，就能对整个app进行自动化测试，保证新代码修改不会影响旧的逻辑，也避免了测试团队纠结于测试的范围，这导致测试团队的工作只剩下检查视图显示有没有错误，控件有没有错位等等，或者干脆自动化测试代码交由测试团队开发，开发团队只写自己负责的单元测试代码，这样也可以降低开发团队的工作量。
+
+*最后相关的demo程序请移步github architecturelab工程*
