@@ -1,1 +1,3 @@
 ![image](https://github.com/kingson09/blog/blob/master/article/resources/binderIPC.jpg)
+
+网上介绍binder的文章很多，最经典的就是红茶一杯系列，但有一点我觉得没有说清楚，那就是binder如何连接起两个进程的内存空间的，如图所示，binder跨进程传输是利用利用linux上进程open文件的时候，会返回一个fd，大部分人都熟悉fd，但很少有人知道fd到底是什么，其实内核会为进程打开的文件生成一个==struct file==结构体，用来描述和记录进程操作的文件，而这些结构体放在内核的一个表中，fd就是这个表的索引，为什么要说到fd呢，其实binder的通信的核心就是利用这个结构体是在内核空间申请，也就是说各个进程都能访问到，binder利用这个结构体中一个==private_data== 的数据结构，这个数据结构可以放一些自定义的数据，由于linux中驱动也是文件，当进程使用binder驱动进行IPC的时候，会open这个驱动，也就是获得了一个fd和创建了一个属于自己进程的struct file结构体，binder驱动会将BBinder和BpBinder这些内存地址放到binder_proc结构体中，然后把==binder_proc==放在这个private_data里，这样各个进程就通过这个结构体连接起了各自的内存空间
