@@ -39,7 +39,7 @@ Window.Callback 有意思 :)，所有的window事件，都从ViewRootImpl收到�
 “面向钱编程”，这笑话让我笑了一天 :)
 
 ### 20180503
-今天思考一个有趣的问题，不管是系统还是组件，之前都是关注启动过程，那么结束过程呢？如果在一个方法中同时调用performClick和finish(),或者恰好用户点击屏幕之后，wms还没来得及分发事件，就调用了finish(),这个事件会被执行吗？结果一看源码，发现没那么复杂，在finish()方法中，调用AMS是个同步方法，也就是说在AMS把所有的Activity资源断开之前，主线程是挂起的。。。。,姑且猜测App进程调用AMS应该都是同步的，而AMS调用APP都要经过handler，都是异步的，一方面避免挂起AMS，另一方面也是因为App进程的单线程模型
+今天思考一个有趣的问题，不管是系统还是组件，之前都是关注启动过程，那么结束过程呢？如果在一个方法中调用finish(),或者恰好用户点击屏幕之后，wms还没来得及分发事件，就调用了finish(),这个事件会被执行吗？结果一看源码，发现没那么复杂，在finish()方法中，调用AMS是个同步方法，也就是说在AMS把所有的Activity资源断开之前，主线程是挂起的。。。。,姑且猜测App进程调用AMS应该都是同步的，而AMS调用APP都要经过handler，都是异步的，一方面避免挂起AMS，另一方面也是因为App进程的单线程模型
 
 ```
 if (ActivityManager.getService().finishActivity(mToken, resultCode, resultData, finishTask)) {
