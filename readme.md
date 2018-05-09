@@ -39,10 +39,14 @@ Window.Callback 有意思 :)，所有的window事件，都从ViewRootImpl收到�
 “面向钱编程”，这笑话让我笑了一天 :)
 
 ### 20180503
-今天思考一个有趣的问题，不管是系统还是组件，之前都是关注启动过程，那么结束过程呢？如果在一个方法中调用finish(),或者恰好用户点击屏幕之后，wms还没来得及分发事件，就调用了finish(),这个事件会被执行吗？结果一看源码，发现没那么复杂，在finish()方法中，调用AMS是个同步方法，也就是说在AMS把所有的Activity资源断开之前，主线程是挂起的。。。。,姑且猜测App进程调用AMS应该都是同步的，而AMS调用APP都要经过handler，都是异步的，一方面避免挂起AMS，另一方面也是因为App进程的单线程模型
+今天思考一个有趣的问题，不管是系统还是组件，之前都是关注启动过程，那么结束过程呢？如果在一个方法中同时调用performClick和finish(),或者恰好用户点击屏幕之后，wms还没来得及分发事件，就调用了finish(),这个事件会被执行吗？结果一看源码，发现没那么复杂，在finish()方法中，调用AMS是个同步方法，也就是说在AMS把所有的Activity资源断开之前，主线程是挂起的。。。。,姑且猜测App进程调用AMS应该都是同步的（除了start组件这种），而AMS调用APP都要经过handler，都是异步的，一方面避免挂起AMS，另一方面也是因为App进程的单线程模型
 
 ```
 if (ActivityManager.getService().finishActivity(mToken, resultCode, resultData, finishTask)) {
                     mFinished = true;
 }
 ```
+### 20180504
+呜呼，看着那些优秀的开源代码结构设计，什么时候自己才能参与设计这样的项目，或者像RednaxelaFX一样成为VM界的大牛，被人膜拜！
+
+还是说正题吧 :) ,昨日研究起activity结束情景来，一发不可收拾，产生了各种各样的疑问，在回忆起以前解决过的插件框架因为Activity重建导致的问题，遂深入研究一下，发现了一篇好文章，[Android后台杀死系列之二：ActivityManagerService与App现场恢复机制](https://www.jianshu.com/p/e3612a9b1af3)，这篇文章详细描述了android进程回收和恢复机制，写的很好，我就不转载了，从这篇文章主要了解到三个知识：AMS恢复app栈或者activity是通过ActivityRecord、binder服务端被杀客户端会收到讣告、activity保存的state会跨进程传输到AMS。第一点我之前也是这样猜测的，第二点属于纯新的知识，最是这第三点让我惊讶，我之前一直以为activity状态会序列化到磁盘上存储，没想到是跨进程传输到AMS，这让我很吃惊，那么很显然出现了一个问题，如果这个state超过binder限制1M，不就崩了吗？于是实验验证，果然崩了。。。，Google你这不是坑爹吗，不过API 21之后好像增加了一个新的方法onSaveInstanceState(Bundle outState, PersistableBundle outPersistentState)，可以进行持久化存储
