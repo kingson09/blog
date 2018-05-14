@@ -54,3 +54,5 @@ if (ActivityManager.getService().finishActivity(mToken, resultCode, resultData, 
 Google I/O大会，“有35%的专业Android开发者在使用Kotlin”，我想说那你的Dart呢，Flutter用dart，Kotlin又是Android 开发一级语言，到底闹哪样，ios那边推swift，冲你们这瞎搞的状态，只能让我感觉Html5才最有可能成为未来三端统一架构的开发语言，只要未来Google和Apple不要给使绊子就行，别拦着我，我要投身前端阵营了 :)
 ### 20180510
 NewRelic真傻啊，居然不知道混淆自己代码保护自己的知识产权，国内什么OneAPM、GrowingIO、redware、twoapm各种抄袭人家的源码，甚至包括我们网易的APM也是参考GrowingIO，不过这样也挺好的，可以让程序员们共享技术成果，避免出现Oracle那样的专利流氓，中国的程序员在技术分享方面还是很赞的
+### 20180512
+周六开始学习Html和JavaScript的基础知识，突然冒出一个有意思的想法，Flutter是在skia canvas的api基础上封装的布局框架，但开发语言是dart，所以需要dart虚拟机的支持，并且Flutter貌似只支持iOS和Android平台，那么既然Html5也暴露 了Canvas API，我们可不可以基于Html5的canvas 元素和Flutter的布局体系，封装一套前端的Flutter布局框架呢？这样前端开发就可以抛弃DOM和CSS那套比较老的UI操作方式
