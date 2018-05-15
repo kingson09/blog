@@ -86,3 +86,5 @@ protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
 前段时间两位同事去西二旗面试新人，聊起了单例的问题，说起单例可能是码农界最常见的问题了，但两位同事对单例的看法却让我很是吃惊，他们认为，如果你写一个饿汉式的单例，显然是不过关的，而我对此却持不同的看法，实际上根据我的经验，在没有静态方法或者静态函数的单例上，使用单例必须获得单例的实例（在这种情况下实际上会触发类的加载,而类的加载和初始化是同步的），在这种情况下，你使用加锁的getInstance获得单例与饿汉式并没有明显区别，反而因锁的存在降低程序性能，假如你的单例真的有静态成员，那么你使用静态内部类的方式创造单例也是可以的，总之我认为那些双重检查或者加锁的单例模式都是不可取的。
 
 最近面试也问到了广播的一些东西，虽然大家平时用广播基本上也就是普通广播和Local广播，但某些知识在某些场合，还是有些用处，因此又重新复习了一下广播相关的东西，当然还是老套路，先看使用方法，再看系统源码，过程不提了，没什么新意，贴两个还不错的文章做个记录吧，[BroadcastReceiver的原理和使用](https://blog.csdn.net/yueqian_scut/article/details/51298996)，[Android广播工作过程分析](https://jdqm.github.io/2017/09/26/broadcast-analysis/)、[android 限制广播消息的接收者](https://blog.csdn.net/mingli198611/article/details/17762149)。
+
+sharedUid与uid，挺有意思，原来ContentProvider可以利用这玩意做multiprocess，知乎上的这个讨论也挺有深度，[app覆盖安装的时候，会改变UID吗?](https://www.zhihu.com/question/31800220)
