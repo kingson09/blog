@@ -88,3 +88,5 @@ protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
 最近面试也问到了广播的一些东西，虽然大家平时用广播基本上也就是普通广播和Local广播，但某些知识在某些场合，还是有些用处，因此又重新复习了一下广播相关的东西，当然还是老套路，先看使用方法，再看系统源码，过程不提了，没什么新意，贴两个还不错的文章做个记录吧，[BroadcastReceiver的原理和使用](https://blog.csdn.net/yueqian_scut/article/details/51298996)，[Android广播工作过程分析](https://jdqm.github.io/2017/09/26/broadcast-analysis/)、[android 限制广播消息的接收者](https://blog.csdn.net/mingli198611/article/details/17762149)。
 
 sharedUid与uid，挺有意思，原来ContentProvider可以利用这玩意做multiprocess，知乎上的这个讨论也挺有深度，[app覆盖安装的时候，会改变UID吗?](https://www.zhihu.com/question/31800220)
+
+如果在一个同步过程中调用多次startActivity，这些新启动的Activity生命周期会怎么样? AMS只会安排启动最顶层的那个Activity，当这个Activity finish以后，下面的Activity才会走onCreate onResume之类的流程，也就是说，startActivity之后，这个Activity虽然在栈中有记录，但在APP进程真不一定会启动
