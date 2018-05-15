@@ -67,3 +67,22 @@ var h=window.innerHeight
 || document.body.clientHeight;
 ```
 前端这历史包袱，够沉重的。。。。
+### 20180513
+今天负责需求的同学跟我反馈灰度包出了很多jsoup ClassNotFound的崩溃，追查问题后发现是因为一位小同学在将支付代码插件化的时候，把一个第三方lib遗留在了主项目中，而这个lib依赖的jsoup库却在插件apk中，他们虽然觉得和这个有关，但说不清楚为什么，其实主要还是类加载机制不熟悉，我们的插件是用从主项目派生的类加载器加载，第三方lib是被主项目的classloader加载，当他调用jsoup的时候必然会从自己的classloader也就是主项目的Cl向上查找，而jsoup实际在插件中，插件的类加载器是主项目派生的，显然找不到了，甚至有一位同学认为：classA(classloaderChild 派生自 classloaderParent)调用classB(classloaderParent)调用classC，这种调用关系情况下，虚拟机也会去classA的类加载器classloaderChild里去寻找classC,
+### 20180514
+今天又来了新问题，一个同事问我listview嵌套grideview怎么整，一下把我问懵逼了，我说：你说啥?，小同事给我描述了一下需求，也说了以下网上最普遍的两种解决方案：
+
+```
+@Override
+protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
+    int expandSpec = MeasureSpec.makeMeasureSpec(Integer.MAX_VALUE >> 2,
+                MeasureSpec.AT_MOST);
+    super.onMeasure(widthMeasureSpec, expandSpec);
+}
+```
+第二种就不贴代码了，[ScrollView嵌套两个及以上ListView的解决方案](https://www.jianshu.com/p/bae7c596a1c6)
+，第一种一看就被我pass了，你这不就成gridlayout了吗，第二种好点，但一是比较复杂，二是也会绘绘出一屏，既然俩都不行，我又思考了一下，发现陷入了他的思维误区，哪有什么listview嵌套GridView，根本不需要里面那个GridView，不就是外面那个listview多了几种view type吗，犯这种错误还是对listview没有完全理解
+### 20180515
+前段时间两位同事去西二旗面试新人，聊起了单例的问题，说起单例可能是码农界最常见的问题了，但两位同事对单例的看法却让我很是吃惊，他们认为，如果你写一个饿汉式的单例，显然是不过关的，而我对此却持不同的看法，实际上根据我的经验，在没有静态方法或者静态函数的单例上，使用单例必须获得单例的实例（在这种情况下实际上会触发类的加载,而类的加载和初始化是同步的），在这种情况下，你使用加锁的getInstance获得单例与饿汉式并没有明显区别，反而因锁的存在降低程序性能，假如你的单例真的有静态成员，那么你使用静态内部类的方式创造单例也是可以的，总之我认为那些双重检查或者加锁的单例模式都是不可取的。
+
+最近面试也问到了广播的一些东西，虽然大家平时用广播基本上也就是普通广播和Local广播，但某些知识在某些场合，还是有些用处，因此又重新复习了一下广播相关的东西，当然还是老套路，先看使用方法，再看系统源码，过程不提了，没什么新意，贴两个还不错的文章做个记录吧，[BroadcastReceiver的原理和使用](https://blog.csdn.net/yueqian_scut/article/details/51298996)，[Android广播工作过程分析](https://jdqm.github.io/2017/09/26/broadcast-analysis/)、[android 限制广播消息的接收者](https://blog.csdn.net/mingli198611/article/details/17762149)。
