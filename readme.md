@@ -90,3 +90,25 @@ protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
 sharedUid与uid，挺有意思，原来ContentProvider可以利用这玩意做multiprocess，知乎上的这个讨论也挺有深度，[app覆盖安装的时候，会改变UID吗?](https://www.zhihu.com/question/31800220)
 
 如果在一个同步过程中调用多次startActivity，这些新启动的Activity生命周期会怎么样? AMS只会安排启动最顶层的那个Activity，当这个Activity finish以后，下面的Activity才会走onCreate onResume之类的流程，也就是说，startActivity之后，这个Activity虽然在栈中有记录，但在APP进程真不一定会启动
+### 20180516
+今天学了一招，触摸事件触发过程中，如果move事件超出了TouchTarget的范围，那么点击事件不会触发，详细过程如下：
+
+```
+case MotionEvent.ACTION_MOVE:
+    if (clickable) {
+        drawableHotspotChanged(x, y);
+    }
+    // Be lenient about moving outside of buttons
+    if (!pointInView(x, y, mTouchSlop)) {
+    // Outside button
+    // Remove any future long press/tap checks
+		removeTapCallback();
+		removeLongPressCallback();
+		if ((mPrivateFlags & PFLAG_PRESSED) != 0) {
+			setPressed(false);
+		}
+		mPrivateFlags3 &= ~PFLAG3_FINGER_DOWN;
+	}
+    break;
+```
+pointInView会再次判断触摸事件区域是否在自己坐标内，如果不是，会在removeTapCallback等方法中清除press状态
