@@ -112,3 +112,5 @@ case MotionEvent.ACTION_MOVE:
     break;
 ```
 pointInView会再次判断触摸事件区域是否在自己坐标内，如果不是，会在removeTapCallback等方法中清除press状态
+### 20180517
+IBinder.DeathRecipient Binder讣告机制
